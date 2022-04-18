@@ -107,6 +107,9 @@
             );
             //此时的偏移量
             // this.startOffset = scrollTop - (scrollTop % this.itemSize);// 元素等高
+            // if (this.start >= 1 && this.start - this.aboveCount != 0) {
+            //   this.startOffset = this.positions[this.start - 1].bottom;
+            // }
             if (this.start >= 1) {
               // start元素和缓冲区数据的高度距离
               let size =
@@ -117,6 +120,7 @@
             } else {
               this.startOffset = 0;
             }
+
             // 触发renderer函数
             this.renderer();
           });
