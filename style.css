@@ -1,0 +1,127 @@
+body {
+  background-color: #162871;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+  font-size: 16px;
+}
+.wrapper {
+  padding: 1rem 0 0 0;
+  margin-top: 2rem;
+  height: 90%;
+  align-self: flex-start;
+  border: 1px solid #4574d6;
+}
+.wrapper > .navbar {
+  height: 2rem;
+  margin: 0 1rem 1rem;
+  position: relative;
+}
+.wrapper > .title {
+  margin: 0 1.5rem;
+  font-size: 1.2rem;
+  columns: 5;
+  gap: 1.2rem;
+  color: #55ffff;
+  text-align: center;
+}
+input#searchCondition {
+  height: 1.5rem;
+  width: 60%;
+  background: none;
+  border: 0.1rem solid #00fcf8c4;
+  border-radius: 0.5rem;
+  caret-color: #00fcf9;
+  outline: none;
+  color: #f3f3f3;
+  font-size: 1rem;
+  font-family: 'microsoft yahei';
+}
+.wrapper .btn {
+  padding: 0.2rem;
+  text-align: right;
+  font-size: 1rem;
+  font-weight: 500;
+  font-family: 'microsoft yahei';
+  color: #fff;
+  border-radius: 0.5rem;
+  border: 0.1rem solid #526cee;
+  background: none;
+}
+.wrapper .btn:hover {
+  color: #2affff;
+  background-color: #6178e9;
+}
+.wrapper .btn.btn-search {
+  margin-left: 1rem;
+}
+.wrapper .btn.btn-refresh {
+  margin-left: 2.5rem;
+}
+.title > .column {
+  height: 2rem;
+  -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.container {
+  height: calc(100% - 2rem - 2rem - 1rem);
+  overflow: auto;
+  position: relative;
+}
+.container::-webkit-scrollbar {
+  width: 10px; /*高宽分别对应横竖滚动条的尺寸*/
+  height: 1px;
+}
+/*滚动条里面小方块*/
+.container::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+  background: skyblue;
+}
+/*滚动条里面轨道*/
+.container::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  background: #ededed;
+}
+
+/* .container::-webkit-scrollbar {
+  display: none;
+} */
+.list-phantom {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  height: 9999px;
+}
+.list {
+  left: 0;
+  right: 0;
+  top: 0;
+  position: absolute;
+  text-align: center;
+}
+.list-item {
+  padding: 1rem 0.5rem 1rem 1rem;
+  color: #555;
+  box-sizing: border-box;
+  border-bottom: 1px solid #999;
+  display: flex;
+  text-align: center;
+  align-items: center;
+  gap: 1rem;
+}
+.list-item > .column {
+  flex: 1;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 500;
+  /* align-self: center; */
+  word-break: break-all;
+}

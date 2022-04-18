@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="navbar">
+        <input type="text" id="searchCondition" />
+        <button class="btn btn-search">搜索</button>
+        <button class="btn btn-refresh">刷新</button>
+      </div>
+      <div class="title">
+        <div class="column">站所名称</div>
+        <div class="column">总工单</div>
+        <div class="column">总工时</div>
+        <div class="column">类型</div>
+        <div class="column">区域</div>
+      </div>
+      <div class="container">
+        <!-- 使用list-phantom提高用户体验，不然拖动滚动条拖不到底 -->
+        <div class="list-phantom"></div>
+        <!-- 渲染列表项的容器 -->
+        <div class="list"></div>
+      </div>
+    </div>
+    <script type="module">
+      import listData from './data.js';
+      import { findIndexOverHeight } from './utils.js';
+      let pois = JSON.parse(listData.data).poiPage.pois;
+      class VirtualScroll {
+        constructor({ el, mask, list, data, itemEstimatedSize, itemElementGenerator, bufferScale = 0.5 }) {
+          this.$el = el; // 容器元素
+          this.$mask = mask; // 高度容器元素
+          this.$list = list; // 列表容器元素
+          this.list = typeof data === 'function' ? data() : data; // 需要展示的原始列表数据
+          this.itemSize = itemEstimatedSize; // 每个列表元素的预估高度
+          this.itemElementGenerator = itemElementGenerator; // 列表元素的DOM生成器
+          this.bufferScale = bufferScale; // 缓冲区数据比例——防止滚动过快导致渲染不及时的白屏
+          this.initContainer(); // 初始化容器元素虚拟滚动变量
+          this.initPositions(); // 初始化列表元素位置信息
+          this.initMask(); // 初始化高度容器高度变量
+          this.initData(); // 初始化列表元素变量
+          this.initEvent(); // 绑定滚动事件
+        }
+        setList(data) {
+          this.list = typeof data === 'function' ? data() : data;
+          this.$el.scrollTop = 0;
+          this.initPositions(); // 初始化列表元素位置信息
+          this.initMask(); // 初始化高度容器高度变量
+          this.initData(); // 初始化列表元素变量
+          this.initEvent(); // 绑定滚动事件
+        }
+        initContainer() {
+          this.containerHeight = this.$el.clientHeight; // 容器元素可视区域高度
+          this.startOffset = 0; //容器元素的偏移量
+        }
+        initPositions() {
+          this.positions = this.list.map((item, index) => {
+            return {
+              index,
+              height: this.itemSize,
+              top: index * this.itemSize,
+              bottom: (index + 1) * this.itemSize,
+            };
+          });
+        }
+        initMask() {
+          // this.contentHeight = this.list.length * this.itemSize; // 列表元素总高度
+          this.contentHeight = this.positions[this.positions.length - 1].bottom; // 列表元素总高度
+          this.$mask.style.height = `${this.contentHeight}px`; // 高度容器高度设置
+        }
+        initData() {
+          this.visibleCount = Math.ceil(this.containerHeight / this.itemSize); // 可视的列表元素数量
+          this.start = 0; // 起始列表元素索引
+          this.end = this.start + this.visibleCount; // 终止列表元素索引
+          this.aboveCount = Math.min(this.start, this.bufferScale * this.visibleCount); // 上方多加载的数据
+          this.belowCount = Math.min(this.list.length - this.end, this.bufferScale * this.visibleCount); // 下方多加载的数据
+          this.visibleData = this.list.slice(
+            this.start - this.aboveCount,
+            Math.min(this.end + this.belowCount, this.list.length)
+          ); // 可视的列表元素数据
+          this.renderer(); // 渲染列表
+        }
+        initEvent() {
+          this.$el.addEventListener('scroll', e => {
+            let scrollTop = this.$el.scrollTop;
+            //此时的开始索引
+            // this.start = Math.floor(scrollTop / this.itemSize);// 元素等高
+            this.start = this.getStartIndex(scrollTop);
+            // 此时的可视列表元素数量
+            // this.visibleCount = Math.ceil(this.containerHeight / this.itemSize);// 元素等高
+            // this.visibleCount = this.getVisibleCount(this.containerHeight)
+            //此时的结束索引
+            this.end = this.start + this.visibleCount;
+
+            // 可视的列表元素数据
+            this.aboveCount = Math.min(this.start, this.bufferScale * this.visibleCount); // 上方多加载的数据
+            this.belowCount = Math.min(this.list.length - this.end, this.bufferScale * this.visibleCount); // 下方多加载的数据
+            this.visibleData = this.list.slice(
+              this.start - this.aboveCount,
+              Math.min(this.end + this.belowCount, this.list.length)
+            );
+            //此时的偏移量
+            // this.startOffset = scrollTop - (scrollTop % this.itemSize);// 元素等高
+            if (this.start >= 1 && this.start - this.aboveCount != 0) {
+              this.startOffset = this.positions[this.start - 1].bottom;
+            } else {
+              this.startOffset = 0;
+            }
+            // 触发renderer函数
+            this.renderer();
+          });
+        }
+        getStartIndex(scrollTop = 0) {
+          //二分法查找
+          let start = 0;
+          let end = this.positions.length - 1;
+          let tempIndex = null;
+          while (start <= end) {
+            let midIndex = parseInt((start + end) / 2);
+            let midValue = this.positions[midIndex].bottom;
+            if (midValue === scrollTop) {
+              return midIndex + 1;
+            } else if (midValue < scrollTop) {
+              start = midIndex + 1;
+            } else if (midValue > scrollTop) {
+              if (tempIndex === null || tempIndex > midIndex) {
+                tempIndex = midIndex;
+              }
+              end = end - 1;
+            }
+          }
+          return tempIndex;
+        }
+        renderer() {
+          this.$list.innerHTML = '';
+          this.visibleData.forEach(item => {
+            const $item = this.itemElementGenerator(item);
+            this.$list.appendChild($item);
+          });
+          // 不要在滚动的时候把list容器滚到上面被覆盖，而是一直显示list的第一项
+          this.$list.style.transform = `translateY(${this.startOffset}px)`;
+          this.updated();
+        }
+        updated() {
+          //获取真实元素大小，修改对应的尺寸缓存
+          this.updateItemsSize();
+          //更新列表总高度
+          let height = this.positions[this.positions.length - 1].bottom;
+          this.$mask.style.height = height + 'px';
+        }
+        updateItemsSize() {
+          let nodes = this.$list.children;
+          [...nodes].forEach(node => {
+            let rect = node.getBoundingClientRect();
+            let height = rect.height;
+            let index = Number(node.dataset.index);
+            let oldHeight = this.positions[index].height;
+            let dValue = oldHeight - height;
+            //存在差值
+            if (dValue) {
+              // 更新当前节点高度及位置信息
+              this.positions[index].bottom = this.positions[index].bottom - dValue;
+              this.positions[index].height = height;
+              // 更新后续节点位置信息
+              for (let k = index + 1; k < this.positions.length; k++) {
+                this.positions[k].top = this.positions[k - 1].bottom;
+                this.positions[k].bottom = this.positions[k].bottom - dValue;
+              }
+            }
+          });
+        }
+      }
+      let vsList = new VirtualScroll({
+        el: document.querySelector('.container'),
+        mask: document.querySelector('.list-phantom'),
+        list: document.querySelector('.list'),
+        data: function () {
+          let data = pois.filter(item => item.assetDistrict != null);
+          data.sort((a, b) => b.assetDistrict.localeCompare(a.assetDistrict, 'zh'));
+          data.sort((a, b) => b.digitizedAsset - a.digitizedAsset);
+          data.sort((a, b) => b.onlineMonitored - a.onlineMonitored);
+          return data.map((item, index) => {
+            item.region = item.region?.name;
+            item.taskPage = item.taskPage?.count;
+            item.index = index;
+            return item;
+          });
+        },
+        itemEstimatedSize: 75,
+        itemElementGenerator: function (item) {
+          let keys = ['_id', 'name', 'taskPage', 'totalTimeOnSite', 'assetDistrict', 'region'];
+          const div = document.createElement('div');
+          div.classList.add('list-item');
+          div.dataset.index = item.index;
+          for (const key of keys) {
+            const dom = document.createElement('div');
+            dom.classList.add('column');
+            dom.innerText = item[key];
+            if (key === '_id') dom.style.display = 'none';
+            if (key === 'totalTimeOnSite') dom.innerText = parseFloat(item[key] / 3600 / 24).toFixed(2);
+            div.appendChild(dom);
+          }
+          return div;
+        },
+      });
+      document.querySelector('.btn.btn-search').addEventListener('click', e => {
+        if (searchCondition.value.trim() === '') return;
+        vsList.setList(function () {
+          let data = pois.filter(item => item.assetDistrict != null);
+          data.sort((a, b) => b.assetDistrict.localeCompare(a.assetDistrict, 'zh'));
+          data.sort((a, b) => b.digitizedAsset - a.digitizedAsset);
+          data.sort((a, b) => b.onlineMonitored - a.onlineMonitored);
+          return data
+            .filter(item => item.name.includes(searchCondition.value.trim()))
+            .map((item, index) => {
+              item.index = index;
+              return item;
+            });
+        });
+      });
+      document.querySelector('.btn.btn-refresh').addEventListener('click', e => {
+        vsList.setList(function () {
+          let data = pois.filter(item => item.assetDistrict != null);
+          data.sort((a, b) => b.assetDistrict.localeCompare(a.assetDistrict, 'zh'));
+          data.sort((a, b) => b.digitizedAsset - a.digitizedAsset);
+          data.sort((a, b) => b.onlineMonitored - a.onlineMonitored);
+          return data.map((item, index) => {
+            item.index = index;
+            return item;
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
