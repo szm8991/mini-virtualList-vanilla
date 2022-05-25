@@ -30,10 +30,17 @@
     </div>
     <script type="module">
       import listData from './data.js';
-      import { findIndexOverHeight } from './utils.js';
       let pois = JSON.parse(listData.data).poiPage.pois;
       class VirtualScroll {
-        constructor({ el, mask, list, data, itemEstimatedSize, itemElementGenerator, bufferScale = 1 }) {
+        constructor({
+          el,
+          mask,
+          list,
+          data,
+          itemEstimatedSize,
+          itemElementGenerator,
+          bufferScale = 1,
+        }) {
           this.$el = el; // 容器元素
           this.$mask = mask; // 高度容器元素
           this.$list = list; // 列表容器元素
@@ -79,7 +86,10 @@
           this.start = 0; // 起始列表元素索引
           this.end = this.start + this.visibleCount; // 终止列表元素索引
           this.aboveCount = Math.min(this.start, parseInt(this.bufferScale * this.visibleCount)); // 上方多加载的数据
-          this.belowCount = Math.min(this.list.length - this.end, parseInt(this.bufferScale * this.visibleCount)); // 下方多加载的数据
+          this.belowCount = Math.min(
+            this.list.length - this.end,
+            parseInt(this.bufferScale * this.visibleCount)
+          ); // 下方多加载的数据
           this.visibleData = this.list.slice(
             this.start - this.aboveCount,
             Math.min(this.end + this.belowCount, this.list.length)
@@ -99,7 +109,10 @@
             this.end = this.start + this.visibleCount;
             // 可视的列表元素数据
             this.aboveCount = Math.min(this.start, parseInt(this.bufferScale * this.visibleCount)); // 上方多加载的数据
-            this.belowCount = Math.min(this.list.length - this.end, parseInt(this.bufferScale * this.visibleCount)); // 下方多加载的数据
+            this.belowCount = Math.min(
+              this.list.length - this.end,
+              parseInt(this.bufferScale * this.visibleCount)
+            ); // 下方多加载的数据
             console.log(this.start, this.aboveCount);
             this.visibleData = this.list.slice(
               this.start - this.aboveCount,
@@ -114,7 +127,9 @@
               // start元素和缓冲区数据的高度距离
               let size =
                 this.positions[this.start].top -
-                (this.positions[this.start - this.aboveCount] ? this.positions[this.start - this.aboveCount].top : 0);
+                (this.positions[this.start - this.aboveCount]
+                  ? this.positions[this.start - this.aboveCount].top
+                  : 0);
               // 偏移量应该减去这个高度距离
               this.startOffset = this.positions[this.start - 1].bottom - size;
             } else {
@@ -215,7 +230,8 @@
             dom.classList.add('column');
             dom.innerText = item[key];
             if (key === '_id') dom.style.display = 'none';
-            if (key === 'totalTimeOnSite') dom.innerText = parseFloat(item[key] / 3600 / 24).toFixed(2);
+            if (key === 'totalTimeOnSite')
+              dom.innerText = parseFloat(item[key] / 3600 / 24).toFixed(2);
             div.appendChild(dom);
           }
           return div;
